@@ -1,3 +1,4 @@
+
 /// 重新啟動app
     func restartApplication() {
         let controller = yourViewController()
