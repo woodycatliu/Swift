@@ -159,7 +159,6 @@ class MyView: UIView {
         lodingLayer.removeAnimation(forKey: "twist")
         
         //lodingLayer.removeAnimation(forKey: #keyPath(MyLayer.dynamicValue))
-        //lodingLayer.actions?.removeAll()
         isTwist = false
     }
 
@@ -219,6 +218,5 @@ class ViewController: UIViewController {
             lodingLayer.dynamicValue = dynamicValue
         }
         lodingLayer.removeAnimation(forKey: #keyPath(MyLayer.dynamicValue))
-        lodingLayer.actions?.removeAll()
         isTwist = false
     }
