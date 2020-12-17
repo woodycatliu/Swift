@@ -93,9 +93,8 @@ class MyLayer: CALayer {
         if event == #keyPath(MyLayer.dynamicValue) {
            let animate = CABasicAnimation(keyPath: #keyPath(MyLayer.dynamicValue))
             animate.fromValue = presentation()?.dynamicValue ?? 0
-            animate.toValue = 1000
-            animate.byValue = 0.01
-            animate.duration = 2
+            animate.byValue = 20
+            animate.duration = 1
             animate.timingFunction = CAMediaTimingFunction(name: .linear)
             animate.repeatCount = MAXFLOAT
             return animate
