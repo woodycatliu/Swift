@@ -7,7 +7,8 @@
 1、 API更新值直接在cell裡面用 main Thread做，簡單說是透過 View Model 直接將值傳給 cell 去更新，而不是透過 reloadData 更新
 2、 第二種方法是自己搭配取消動畫2的方法寫一個新的reload func。
 */
-
+ 
+ 
 
 extension UITableView {
      func myReloadData() {
