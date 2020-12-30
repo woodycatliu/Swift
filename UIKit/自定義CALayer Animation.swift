@@ -135,7 +135,7 @@ class MyView: UIView {
 
     func setLayerTintColor(color: UIColor) {
         loadingLayer.tintColor = color
-        loadingLayer.needsDisplay
+        loadingLayer.needsDisplay()
     }
 
     func twist() {
@@ -153,10 +153,10 @@ class MyView: UIView {
     }
 
     func stopTwist() {
-        if let dynamicValue = lodingLayer.presentation()?.dynamicValue {
-            lodingLayer.dynamicValue = dynamicValue
+        if let dynamicValue = loadingLayer.presentation()?.dynamicValue {
+            loadingLayer.dynamicValue = dynamicValue
         }
-        lodingLayer.removeAnimation(forKey: "twist")
+        loadingLayer.removeAnimation(forKey: "twist")
         
         //lodingLayer.removeAnimation(forKey: #keyPath(MyLayer.dynamicValue))
         isTwist = false
