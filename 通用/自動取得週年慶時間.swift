@@ -1,10 +1,10 @@
  
-    /// 取當前weekly 優惠時間
+     /// 取當前weekly 優惠時間
     /// - Parameters:
     ///   - fromDay: 開始日期， 1 =  星期天 \ 2 = 星期一
-    ///   - util: 結束總天數(不包含開始天數)
+    ///   - duraction: 持續天數
     /// - Returns: MM / dd - MM / dd
-    func getWeeklyRangeForNextWeek(fromDay: Int, until: Int)-> String {
+    func getWeeklyRangeForNextWeek(fromDay: Int, duraction: Int)-> String {
         let daysForMoon: [Int: Int] = [1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31]
         let today = Date()
         let dateComponents = Calendar.current.dateComponents(in: TimeZone.current, from: today)
@@ -35,23 +35,24 @@
             fromMoon -= 1
         }
         
-        var realToDay = realFromDay + until
+        var realToDay = realFromDay + duraction
         var toMoon = fromMoon
         
         if let days = daysForMoon[fromMoon] {
             if fromMoon == 2 && realToDay > days + (checkLeapYear(year: year) ? 1 : 0){
                 toMoon += 1
-                realToDay = realToDay - days + (checkLeapYear(year: year) ? 1 : 0)
+                realToDay -= days - (checkLeapYear(year: year) ? 1 : 0)
             }else if realToDay > days {
                 if fromMoon == 12 {
                     toMoon = 1
-                    realToDay = realToDay - days
+                    realToDay -= days
                 } else {
                     toMoon += 1
-                    realToDay = realToDay - days
+                    realToDay -= days
                 }
             }
         }
+        realToDay -= 1
         
         var fromMoonString: String = String(fromMoon)
         var fromDayString: String = String(realFromDay)
