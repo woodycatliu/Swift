@@ -11,6 +11,7 @@ API:  eyWindow.first.rootViewController.presentedViewController
 
 func getVC()-> UIViewController? {
     return UIApplication.shared.windows.filter({$0.isKeyWindow}).first?.rootViewController
+
 }
 
 
@@ -28,3 +29,21 @@ func getVC()-> UIViewController? {
   guard var topVC = getVC() else { return }
   topVC = getTopViewController(vc: topVC)
   topVC.present(VC, animation: true)
+
+
+
+
+/// 完整版
+
+    private func getTopViewController(vc: UIViewController? = UIApplication.shared.windows.filter({$0.isKeyWindow}).first?.rootViewController)-> UIViewController? {
+        
+        if let navigationController = vc as? UINavigationController {
+            return getTopViewController(vc: navigationController)
+        } else if let tabController = vc as? UITabBarController, let selectController = tabController.selectedViewController {
+            return getTopViewController(vc: tabController)
+        } else if let presentedVideController = vc?.presentedViewController {
+            return getTopViewController(vc: presentedVideController)
+        }
+        return vc
+        
+    }
