@@ -40,7 +40,7 @@ func getVC()-> UIViewController? {
         if let navigationController = vc as? UINavigationController {
             return getTopViewController(vc: navigationController)
         } else if let tabController = vc as? UITabBarController, let selectController = tabController.selectedViewController {
-            return getTopViewController(vc: tabController)
+            return getTopViewController(vc: selectController)
         } else if let presentedVideController = vc?.presentedViewController {
             return getTopViewController(vc: presentedVideController)
         }
