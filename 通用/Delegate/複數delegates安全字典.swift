@@ -1,5 +1,6 @@
 
 /*
+代理模式: 
 複數Delegate 使用Swift Dictionary 會造成 memory leak
 使用C NSMapTable 作為字典容器可避免 memoty leak (NSMaptable 有弱引用效果)
 WeakDictionary 將NSMapTable 包裝起來便於使用，
