@@ -11,8 +11,8 @@ extension UIImage {
     /// 壓縮img 至指定大小
     /// - Parameter MB: 預設1
     /// - Returns: 已壓縮 Data
-    public func compressImgMid(MB: Int = 1)-> Data? {
-        let maxLength = MB * 1024 * 1024
+    public func compressImgMid(KB: Int = 1)-> Data? {
+        let maxLength = KB * 1024
         var compression: CGFloat = 1
         
         guard var data = self.jpegData(compressionQuality: compression) else {
