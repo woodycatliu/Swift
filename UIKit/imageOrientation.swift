@@ -1,4 +1,7 @@
- private func imageOrientation(deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation, cameraPosition: AVCaptureDevice.Position = .front) -> UIImage.Orientation {
+
+// return UIImage.Orientation
+private func imageOrientation(deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation, 
+                             cameraPosition: AVCaptureDevice.Position = .front) -> UIImage.Orientation {
        
         var deviceOrientation = deviceOrientation
         
@@ -24,9 +27,44 @@
     }
 
 
+// return Firebase MLKit  VisionDetectorImageOrientation
+private func imageOrientation(deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation, 
+                    cameraPosition: AVCaptureDevice.Position = .front) -> VisionDetectorImageOrientation {
+        var deviceOrientation = deviceOrientation
+        
+        if deviceOrientation == .faceDown || deviceOrientation == .faceUp || deviceOrientation == .unknown {
+            deviceOrientation = currectDeviceOrientation()
+        }
+        
+        switch deviceOrientation {
+        
+        case .portrait:
+            return cameraPosition == .front ? .leftTop : .rightTop
+        case .landscapeLeft:
+            return cameraPosition == .front ? .bottomLeft : .topLeft
+        case .portraitUpsideDown:
+            return cameraPosition == .front ? .rightBottom : .leftBottom
+        case .landscapeRight:
+            return cameraPosition == .front ? .topRight : .bottomRight
+        case .faceUp, .faceDown, .unknown:
+            return .topLeft
+        @unknown default:
+            return cameraPosition == .front ? .leftTop : .rightTop
+        }
+    }
 
-      private func currectDeviceOrientation()-> UIDeviceOrientation {
-        let status = UIApplication.shared.statusBarOrientation
+
+
+
+private func currectDeviceOrientation()-> UIDeviceOrientation {
+         let status: UIInterfaceOrientation
+            
+            if #available(iOS 13, *) {
+                status =  UIApplication.shared.windows.filter { $0.isKeyWindow }.first?.windowScene?.interfaceOrientation ?? .unknown
+            } else {
+                status = UIApplication.shared.statusBarOrientation
+            }
+            
         
         switch status {
         case .portrait, .unknown:
