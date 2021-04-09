@@ -9,10 +9,10 @@ import Foundation
     /// - Returns: 字串
     private func doNumberFormatter(value: Double, min: Int, max: Int) -> String {
         let nsNumber = NSNumber(value: value)
-        let formatrer = NumberFormatter()
-        formatrer.numberStyle = .decimal
-        formatrer.minimumFractionDigits = min
-        formatrer.maximumFractionDigits = max
+        let formater = NumberFormatter()
+        formater.numberStyle = .decimal
+        formater.minimumFractionDigits = min
+        formater.maximumFractionDigits = max
         guard let string = formatrer.string(from: nsNumber) else { return String(value)
         }
         return string
