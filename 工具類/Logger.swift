@@ -23,4 +23,16 @@ class Logger {
         NSLog("[\(caller).\(method)] \(message) - \(time)")
         #endif
     }
+
+    static func log<T>(message: T, file: String = #file, _class: AnyObject, method: String = #function) {
+        #if DEBUG
+        let time = DateUtility().getString(from: Date())
+        let fileName = (file as NSString).lastPathComponent
+        let className = NSStringFromClass(type(of: class))
+        NSLog("[\(className).\(method)]- \(message) at fileName: \(fileName) in Time: \(time)")
+        #endif
+
+    }
+
+
 }
