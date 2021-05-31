@@ -28,7 +28,7 @@ class Logger {
         #if DEBUG
         let time = DateUtility().getString(from: Date())
         let fileName = (file as NSString).lastPathComponent
-        let className = NSStringFromClass(type(of: class))
+        let className = NSStringFromClass(type(of: _class))
         NSLog("[\(className).\(method)]- \(message) at fileName: \(fileName) in Time: \(time)")
         #endif
 
