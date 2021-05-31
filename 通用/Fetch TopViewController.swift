@@ -35,15 +35,26 @@ func getVC()-> UIViewController? {
 
 /// 完整版
 
-    private func getTopViewController(vc: UIViewController? = UIApplication.shared.windows.filter({$0.isKeyWindow}).first?.rootViewController)-> UIViewController? {
+    private func getTopViewController(viewController vc: UIViewController? = UIApplication.shared.windows.filter({$0.isKeyWindow}).first?.rootViewController)-> UIViewController? {
         
-        if let navigationController = vc as? UINavigationController {
-            return getTopViewController(vc: navigationController)
-        } else if let tabController = vc as? UITabBarController, let selectController = tabController.selectedViewController {
-            return getTopViewController(vc: selectController)
-        } else if let presentedVideController = vc?.presentedViewController {
-            return getTopViewController(vc: presentedVideController)
+        if let navigationController = vc as? UINavigationController{
+            if let visibleVC = navigationController.visibleViewController{
+                return getTopViewController(viewController: visibleVC)
+            }
+        }
+        if let tabController = vc as? UITabBarController{
+            if let selected = tabController.selectedViewController{
+                return getTopViewController(vc: selected)
+            }
+        }
+        if let presented = vc?.presentedViewController{
+            return getTopViewController(viewController: presented)
+        }
+        if let alertController = vc as? UIAlertController{
+            if let presentingViewController = alertController.presentingViewController{
+                return presentingViewController
+            }
         }
         return vc
-        
     }
+    
