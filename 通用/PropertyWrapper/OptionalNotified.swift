@@ -1,3 +1,9 @@
+//
+//  OptionalNotified.swift
+//  iOS_MomDad
+//
+//  Created by Woody Liu on 2021/7/24.
+//
 
 import Foundation
 
@@ -12,6 +18,7 @@ public class OptionalNotified<Value: Equatable> {
     
     private let notificationName: NotificaionName
     
+    private var _queue: OperationQueue? = nil
     
     public var wrappedValue: Value? {
         didSet {
@@ -31,23 +38,28 @@ public class OptionalNotified<Value: Equatable> {
     
     public var projectedValue: OptionalNotified<Value> { self }
     
-    public init(wrappedValue: Value?, update updateNotificationName: Notification.Name, non nonNotificationName: Notification.Name, optional optionalNotificationName: Notification.Name) {
+    public init(wrappedValue: Value?, update updateNotificationName: Notification.Name, non nonNotificationName: Notification.Name, optional optionalNotificationName: Notification.Name, queue: OperationQueue? = nil) {
         self.wrappedValue = wrappedValue
         self.updateNotificationName = updateNotificationName
         self.nonNotificationName = nonNotificationName
         self.optionalNotificationName = optionalNotificationName
         
+        self._queue = queue
+        
         self.notificationName = NotificaionName(non: nonNotificationName, optional: optionalNotificationName, update: updateNotificationName)
     }
     
-    public func callAsFunction(option: NotifiedOption, using block: @escaping () -> Void) -> NSObjectProtocol {
+    public func callAsFunction(option: NotifiedOption, queue: OperationQueue? = nil ,using block: @escaping () -> Void) -> NSObjectProtocol {
         let name: Notification.Name = notificationName.name(option)
-        return NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
+        
+        let queue: OperationQueue? = queue == nil ? _queue : queue
+        
+        return NotificationCenter.default.addObserver(forName: name, object: nil, queue: queue) { _ in
             block()
         }
     }
     
-    public func callAsFunction(_ observer: Any, option: NotifiedOption, selector: Selector) {
+    public func callAsFunction(_ observer: Any, option: NotifiedOption, selector: Selector, queue: OperationQueue? = nil) {
         let name: Notification.Name = notificationName.name(option)
         NotificationCenter.default.addObserver(observer, selector: selector, name: name, object: nil)
     }
