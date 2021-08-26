@@ -93,7 +93,7 @@ class SwipeToZoomFlowLayout: UICollectionViewFlowLayout {
         let attributes = self.layoutAttributesForElements(in: visiableRect)
 
         if scrollDirection == .horizontal {
-            return horizontalCenterOffset(attributes, visiableRect, proposedContentOffset)
+            return horizontalCenterOffset(attributes, visiableRect, proposedContentOffset, velocity)
         }
 
         return verticalCenterOffset(attributes, visiableRect, proposedContentOffset)
@@ -217,8 +217,11 @@ extension SwipeToZoomFlowLayout {
     }
     
     
-    private func horizontalCenterOffset(_ attributes: [UICollectionViewLayoutAttributes]?,_ visiableRect: CGRect, _ proposedContentOffset: CGPoint) -> CGPoint {
+     private func horizontalCenterOffset(_ attributes: [UICollectionViewLayoutAttributes]?,_ visiableRect: CGRect, _ proposedContentOffset: CGPoint, _ velocity: CGPoint) -> CGPoint {
+        // 負左往右 正右往左
         
+        let isRightToLeft: Bool = velocity.x < 0 ? false : true
+                
         var adjustAttributes : UICollectionViewLayoutAttributes?
         
         let centerX = visiableRect.minX + visiableRect.width / 2
@@ -228,7 +231,6 @@ extension SwipeToZoomFlowLayout {
             if let candAttr = candAttr {
                 if abs( $0.center.x - centerX) < abs(candAttr.center.x - centerX) {
                     adjustAttributes = $0
-                    
                 }
             } else {
                 adjustAttributes = $0
@@ -236,7 +238,17 @@ extension SwipeToZoomFlowLayout {
             }
         }
         
-        if let adjustAttributes = adjustAttributes {
+        if var adjustAttributes = adjustAttributes,
+           let attributes = attributes{
+            
+            let indexPath = adjustAttributes.indexPath
+            
+            let adjustRow = isRightToLeft ? indexPath.row + 1 : indexPath.row - 1
+            
+            if let index = attributes.firstIndex(where: { $0.indexPath.row == adjustRow }) {
+                adjustAttributes = attributes[index]
+            }
+            
             return CGPoint(x: adjustAttributes.center.x - visiableRect.width / 2, y: proposedContentOffset.y)
         }
         
