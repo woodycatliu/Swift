@@ -17,6 +17,7 @@ class SwipeNavigationController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         interactivePopGestureRecognizer?.delegate = self
+        self.view.addGestureRecognizer(self.fullScreenSwipeGestureRecongnizer)
     }
     
     override func pushViewController(_ viewController: UIViewController, animated: Bool) {
@@ -25,6 +26,20 @@ class SwipeNavigationController: UINavigationController {
           super.pushViewController(viewController, animated: animated)
       }
 
+    
+    private lazy var fullScreenSwipeGestureRecongnizer: UIPanGestureRecognizer = {
+        let gestureRecognizer = UIPanGestureRecognizer()
+        
+        if let cachedInteractionController = self.value(forKey: SwipePopTransitionKey.controller.rawValue) as? NSObject {
+            let action = SwipePopTransitionKey.selector.rawValue
+            let selector = Selector(action)
+            if cachedInteractionController.responds(to: selector) {
+                gestureRecognizer.addTarget(cachedInteractionController, action: selector)
+            }
+        }
+        
+        return gestureRecognizer
+    }()
 }
 
 
@@ -59,4 +74,13 @@ extension SwipeNavigationController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
+}
+
+extension SwipeNavigationController {
+    
+    enum SwipePopTransitionKey: String {
+        case controller = "_cachedInteractionController"
+        case selector = "handleNavigationTransition:"
+    }
+    
 }
