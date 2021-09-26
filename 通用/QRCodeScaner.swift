@@ -1,20 +1,21 @@
-
 import Foundation
 import AVFoundation
 import MLKit
 import Combine
 import UIKit
 
+typealias MLBarcode = Barcode
+typealias CaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer
 
 protocol BarcodeDetecterProtocol: AnyObject {
-    func checkBarcodeFrame(_ barcodes: [Barcode], inSampleBufferSize: CGSize, previewLayer: AVCaptureVideoPreviewLayer)-> (permit: Bool, borcodesFrame: [CGRect])
-    func detectBarcodes(_ barcodes: [Barcode])-> Result<[String], Error>
+    func checkBarcodeFrame(_ frames: [CGRect], inSampleBufferSize size: CGSize, validScanObjectFrame: CGRect?)-> Bool
+    func detectBarcodes(_ barcodes: [MLBarcode])-> Result<[String], Error>
 }
 
 extension BarcodeDetecterProtocol {
     
     /// 將qrcode 元數據的frame 轉乘 iphone UIKit 在 videoPreviewLayer 座標
-    private func convertedRectOfBarcodeFrame(frame: CGRect, inSampleBufferSize size: CGSize, previewLayer: AVCaptureVideoPreviewLayer)-> CGRect {
+    func convertedRectOfBarcodeFrame(frame: CGRect, inSampleBufferSize size: CGSize, previewLayer: AVCaptureVideoPreviewLayer)-> CGRect {
         /// 將 掃到的QRCode.frame 轉為 imgSize 的比例
         let normalizedRect = CGRect(x: frame.origin.x / size.width, y: frame.origin.y / size.height, width: frame.size.width / size.width, height: frame.size.height / size.height)
         /// 將比例轉成 UIkit 座標
@@ -39,6 +40,12 @@ class QRCodeScanner: NSObject {
     }
             
     var isCameraReady = false
+    
+    /// 是否顯示偵測到的Barcode 外框
+    var isShowBarcodeIndicator: Bool = true
+    
+    /// 偵測到的Barcode 外框顏色
+    var barcodeIndicatorColor: UIColor = .init(red: 51/255, green: 234/255, blue: 14/255, alpha: 1)
     
     var scanTimeBetween = 1.0
     
@@ -155,11 +162,13 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         /// 相機讀取到的畫面完整尺寸
         let imgSize = sampleBufferSize(imageBuffer)
         
-        let frameChecking = barcodeDetecter.checkBarcodeFrame(barcodes, inSampleBufferSize: imgSize, previewLayer: videoPreviewLayer)
+        let barcodesFrame = convertBarcodesFrame(barcodes: barcodes, inSampleBufferSize: imgSize)
         
-        videoPreviewLayer.drawBarcodeIndicator(frames: frameChecking.borcodesFrame)
+        if isShowBarcodeIndicator {
+            videoPreviewLayer.drawBarcodeIndicator(frames: barcodesFrame, color: barcodeIndicatorColor)
+        }
         
-        guard frameChecking.permit else {
+        guard barcodeDetecter.checkBarcodeFrame(barcodesFrame, inSampleBufferSize: imgSize, validScanObjectFrame: validScanObjectFrame) else {
             startScan = true
             return
         }
@@ -172,10 +181,7 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         case .failure(let error):
             barcodeResult.send(completion: .failure(error))
         }
-        
     }
-    
-
     
     /// 將 sampleBufferSize 轉換為 UIImage Size
     private func sampleBufferSize(_ imageBuffer: CVImageBuffer)-> CGSize {
@@ -184,12 +190,30 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         return CGSize(width: imgWidth, height: imgHeight)
     }
     
+    
+    /// 將 [Barcode] frame 轉出來
+    func convertBarcodesFrame(barcodes: [Barcode], inSampleBufferSize size: CGSize)-> [CGRect] {
+        var borcodesFrame: [CGRect] = []
+        autoreleasepool {
+            barcodes.forEach { barcode in
+                autoreleasepool {
+                    let frame = convertedRectOfBarcodeFrame(frame: barcode.frame, inSampleBufferSize: size)
+                    borcodesFrame.append(frame)
+                }
+            }
+        }
+        return borcodesFrame
+    }
+    
     /// 將qrcode 元數據的frame 轉乘 iphone UIKit 在 videoPreviewLayer 座標
-    private func convertedRectOfBarcodeFrame(frame: CGRect, inSampleBufferSize size: CGSize)-> CGRect? {
+    private func convertedRectOfBarcodeFrame(frame: CGRect, inSampleBufferSize size: CGSize)-> CGRect {
+        guard let videoPreviewLayer = videoPreviewLayer else {
+            fatalError("videoPreviewLayer is missing")
+        }
         /// 將 掃到的QRCode.frame 轉為 imgSize 的比例
         let normalizedRect = CGRect(x: frame.origin.x / size.width, y: frame.origin.y / size.height, width: frame.size.width / size.width, height: frame.size.height / size.height)
         /// 將比例轉成 UIkit 座標
-        return videoPreviewLayer?.layerRectConverted(fromMetadataOutputRect: normalizedRect)
+        return videoPreviewLayer.layerRectConverted(fromMetadataOutputRect: normalizedRect)
     }
     
    
@@ -258,10 +282,13 @@ extension AVCaptureVideoPreviewLayer {
         frames.forEach {
             let bezierPath = UIBezierPath(rect: $0)
             bezierPath.lineWidth = 1
-            bezierPath.lineCapStyle = .butt
+            bezierPath.lineCapStyle = .square
+            bezierPath.lineJoinStyle = .bevel
+            bezierPath.setLineDash([2, 2], count: 1, phase: 0)
             color.setStroke()
             bezierPath.stroke()
             let layer = CAShapeLayer()
+            layer.name = "QRCodeIndicator"
             layer.frame = bounds
             layer.path = bezierPath.cgPath
             addSublayer(layer)
