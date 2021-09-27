@@ -60,9 +60,6 @@ class QRCodeScanner: NSObject {
     
     let captureVideoDataOutput = AVCaptureVideoDataOutput()
     
-    /// Firebase ML Vision
-    /// 等升級 模組在更換成 Firebase ML 新版本
-    /// 此版本已不推薦使用
     lazy var barcodeScanner: BarcodeScanner = {
         let format: BarcodeFormat = .qrCode
         let barcodeOptions = BarcodeScannerOptions(formats: format)
