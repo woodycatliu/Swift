@@ -1,15 +1,17 @@
+
 import Foundation
 import AVFoundation
 import MLKit
 import Combine
 import UIKit
 
+typealias SMSBocode = BarcodeSMS
 typealias MLBarcode = Barcode
 typealias CaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer
 
 protocol BarcodeDetecterProtocol: AnyObject {
     func checkBarcodeFrame(_ frames: [CGRect], inSampleBufferSize size: CGSize, validScanObjectFrame: CGRect?)-> Bool
-    func detectBarcodes(_ barcodes: [MLBarcode])-> Result<[String], Error>
+    func detectBarcodes(_ barcodes: [MLBarcode])-> Result<[Any], Error>
 }
 
 extension BarcodeDetecterProtocol {
@@ -23,22 +25,27 @@ extension BarcodeDetecterProtocol {
     }
 }
 
-
+protocol QRCodeScannerDelegate: AnyObject {
+    func successToFilterContent(results: [Any])
+    func scanerFailedQRCode(error: Error)
+}
 
 class QRCodeScanner: NSObject {
-        
+    
     weak var videoPreviewLayer: AVCaptureVideoPreviewLayer?
     
     private let barcodeDetecter: BarcodeDetecterProtocol
-
-    var barcodeResult = PassthroughSubject<[String], Error>()
-   
+    
+    private(set) var barcodeResult = PassthroughSubject<[Any], Never>()
+    
+    weak var delegate: QRCodeScannerDelegate?
+    
     var validScanObjectFrame: CGRect?
     
     private var scanOutsideCurrectCGRect: CGRect {
         return validScanObjectFrame ?? videoPreviewLayer?.bounds ?? UIScreen.main.bounds
     }
-            
+    
     var isCameraReady = false
     
     /// 是否顯示偵測到的Barcode 外框
@@ -66,7 +73,7 @@ class QRCodeScanner: NSObject {
         let barcodeScanner = BarcodeScanner.barcodeScanner(options: barcodeOptions)
         return barcodeScanner
     }()
-
+    
     init(barcordDetecter: BarcodeDetecterProtocol) {
         self.barcodeDetecter = barcordDetecter
         super.init()
@@ -94,7 +101,7 @@ class QRCodeScanner: NSObject {
     func startCamera() {
         guard isCameraReady else { return }
         if !captureSession.isRunning{
-             captureSession.startRunning()
+            captureSession.startRunning()
         }
     }
     
@@ -135,12 +142,13 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
             guard let self = self else { return }
             /// 如果分析有錯誤，或是 barcodes 不存在，開啟掃瞄器
             guard error == nil, let barcodes = barcodes, !barcodes.isEmpty else {
+                self.videoPreviewLayer?.drawBarcodeIndicator(frames: [], color: self.barcodeIndicatorColor)
                 self.startScan = true
                 return
             }
             /// 篩選 qrcodes
             self.selectBarcodes(barcodes: barcodes, sampleBuffer: sampleBuffer)
-        
+            
         }
     }
     
@@ -161,22 +169,24 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         let barcodesFrame = convertBarcodesFrame(barcodes: barcodes, inSampleBufferSize: imgSize)
         
-        if isShowBarcodeIndicator {
-            videoPreviewLayer.drawBarcodeIndicator(frames: barcodesFrame, color: barcodeIndicatorColor)
-        }
-        
         guard barcodeDetecter.checkBarcodeFrame(barcodesFrame, inSampleBufferSize: imgSize, validScanObjectFrame: validScanObjectFrame) else {
             startScan = true
             return
         }
-                
+        
+        if isShowBarcodeIndicator {
+            videoPreviewLayer.drawBarcodeIndicator(frames: barcodesFrame, color: barcodeIndicatorColor)
+        }
+        
         let result = barcodeDetecter.detectBarcodes(barcodes)
-    
+        
         switch result {
-        case .success(let content):
-            barcodeResult.send(content)
+        case .success(let results):
+            barcodeResult.send(results)
+            delegate?.successToFilterContent(results: results)
         case .failure(let error):
-            barcodeResult.send(completion: .failure(error))
+            delegate?.scanerFailedQRCode(error: error)
+            startScan = true
         }
     }
     
@@ -213,7 +223,7 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         return videoPreviewLayer.layerRectConverted(fromMetadataOutputRect: normalizedRect)
     }
     
-   
+    
     private func imageOrientation(deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation, cameraPosition: AVCaptureDevice.Position = .front) -> UIImage.Orientation {
         var deviceOrientation = deviceOrientation
         
@@ -222,7 +232,7 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
         switch deviceOrientation {
-        
+            
         case .portrait:
             return cameraPosition == .front ? .leftMirrored : .right
         case .landscapeLeft:
@@ -240,7 +250,7 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     
     private func currectDeviceOrientation()-> UIDeviceOrientation {
-     
+        
         let status: UIInterfaceOrientation
         
         if #available(iOS 15, *) {
@@ -268,26 +278,25 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 
 extension AVCaptureVideoPreviewLayer {
-   
+    
     func drawBarcodeIndicator(frames: [CGRect], color: UIColor = .init(red: 51/255, green: 234/255, blue: 14/255, alpha: 1)) {
         sublayers?.forEach {
             if $0.name == "QRCodeIndicator" {
                 $0.removeFromSuperlayer()
             }
         }
-        
         frames.forEach {
             let bezierPath = UIBezierPath(rect: $0)
-            bezierPath.lineWidth = 1
-            bezierPath.lineCapStyle = .square
-            bezierPath.lineJoinStyle = .bevel
-            bezierPath.setLineDash([2, 2], count: 1, phase: 0)
-            color.setStroke()
-            bezierPath.stroke()
             let layer = CAShapeLayer()
             layer.name = "QRCodeIndicator"
             layer.frame = bounds
             layer.path = bezierPath.cgPath
+            layer.fillColor = UIColor.clear.cgColor
+            layer.strokeColor = color.cgColor
+            layer.lineDashPattern = [10, 10]
+            layer.lineWidth = 2
+            layer.lineCap = .round
+            layer.lineDashPhase = 0
             addSublayer(layer)
         }
         
