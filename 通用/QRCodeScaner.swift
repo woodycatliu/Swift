@@ -73,6 +73,8 @@ class QRCodeScanner: NSObject {
     
     let captureVideoDataOutput = AVCaptureVideoDataOutput()
     
+    var captureVideoDataInput: AVCaptureDeviceInput?
+    
     lazy var barcodeScanner: BarcodeScanner = {
         let format: BarcodeFormat = .qrCode
         let barcodeOptions = BarcodeScannerOptions(formats: format)
@@ -107,6 +109,7 @@ class QRCodeScanner: NSObject {
         
         captureSession.canSetSessionPreset(.low)
         captureSession.addInput(input)
+        captureVideoDataInput = input
         
         /// 影片檔像素，提供空值會依照設備預設
         captureVideoDataOutput.videoSettings = [ (kCVPixelBufferPixelFormatTypeKey as String): kCVPixelFormatType_32BGRA]
@@ -304,7 +307,6 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
     
 }
 
-
 extension AVCaptureVideoPreviewLayer {
     
     func drawBarcodeIndicator(frames: [CGRect], color: UIColor = .init(red: 51/255, green: 234/255, blue: 14/255, alpha: 1)) {
@@ -333,5 +335,35 @@ extension AVCaptureVideoPreviewLayer {
             }
         }
     }
+    
+}
+
+
+
+
+extension QRCodeScanner {
+    
+    @objc
+    func pinchToZoom(_ sender: UIPinchGestureRecognizer) {
+        guard let device = captureVideoDataInput?.device,
+              sender.state == .changed
+        else { return }
+        
+        let maxZoomFactor = device.activeFormat.videoMaxZoomFactor
+        let pinchVelocityDividerFactor: CGFloat = 10.0
+        
+        do {
+            try device.lockForConfiguration()
+            defer { device.unlockForConfiguration() }
+            
+            let desiredZoomFactor = device.videoZoomFactor + atan2(sender.velocity, pinchVelocityDividerFactor)
+            device.videoZoomFactor = max(1.0, min(desiredZoomFactor, maxZoomFactor))
+            
+        } catch {
+            print(error)
+        }
+    }
+        
+    
     
 }
