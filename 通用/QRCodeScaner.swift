@@ -1,3 +1,9 @@
+//
+//  QRCodeScaner.swift
+//  RealNameRegistraionBook
+//
+//  Created by Woody Liu on 2021/9/26.
+//
 
 import Foundation
 import AVFoundation
@@ -81,14 +87,36 @@ class QRCodeScanner: NSObject {
     
     func setQRCodeScanner() {
         guard let captureDevice = AVCaptureDevice.default(for: .video) else { return }
+        
+        if captureDevice.isFocusModeSupported(.continuousAutoFocus) {
+            try? captureDevice.lockForConfiguration()
+            captureDevice.focusMode = .continuousAutoFocus
+            captureDevice.exposureMode = .autoExpose
+            captureDevice.unlockForConfiguration()
+        }
+        
+        if captureDevice.isWhiteBalanceModeSupported(.autoWhiteBalance) {
+            try? captureDevice.lockForConfiguration()
+            captureDevice.whiteBalanceMode = .autoWhiteBalance
+            captureDevice.unlockForConfiguration()
+        }
+
+        
         guard let input = try? AVCaptureDeviceInput(device: captureDevice) else { return }
+        captureSession.beginConfiguration()
+        
+        captureSession.canSetSessionPreset(.low)
         captureSession.addInput(input)
         
         /// 影片檔像素，提供空值會依照設備預設
-        captureVideoDataOutput.videoSettings = [:]
+        captureVideoDataOutput.videoSettings = [ (kCVPixelBufferPixelFormatTypeKey as String): kCVPixelFormatType_32BGRA]
         captureVideoDataOutput.alwaysDiscardsLateVideoFrames = true
+    
         
         captureSession.addOutput(captureVideoDataOutput)
+        captureSession.commitConfiguration()
+
+        
         captureVideoDataOutput.setSampleBufferDelegate(self, queue: .main)
         /// 限制鏡頭 Output 在 videoPreviewLayer bounds 內
         videoPreviewLayer?.videoGravity = .resizeAspectFill
@@ -280,11 +308,8 @@ extension QRCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
 extension AVCaptureVideoPreviewLayer {
     
     func drawBarcodeIndicator(frames: [CGRect], color: UIColor = .init(red: 51/255, green: 234/255, blue: 14/255, alpha: 1)) {
-        sublayers?.forEach {
-            if $0.name == "QRCodeIndicator" {
-                $0.removeFromSuperlayer()
-            }
-        }
+        removeBarcodeIndicator()
+        
         frames.forEach {
             let bezierPath = UIBezierPath(rect: $0)
             let layer = CAShapeLayer()
@@ -299,7 +324,14 @@ extension AVCaptureVideoPreviewLayer {
             layer.lineDashPhase = 0
             addSublayer(layer)
         }
-        
+    }
+    
+    func removeBarcodeIndicator() {
+        sublayers?.forEach {
+            if $0.name == "QRCodeIndicator" {
+                $0.removeFromSuperlayer()
+            }
+        }
     }
     
 }
