@@ -13,7 +13,7 @@ WeakDictionary 將NSMapTable 包裝起來便於使用，
 
 final class WeakDictionary<ProtoclClass> {
     
-    private var mapTable: NSMapTable = NSMapTable<NSString, AnyObject>.init()
+    private var mapTable: NSMapTable = NSMapTable<NSString, AnyObject>.init(keyOptions: .strongMemory, valueOptions: .weakMemory)
     
     private var lock: NSLock = NSLock()
     
