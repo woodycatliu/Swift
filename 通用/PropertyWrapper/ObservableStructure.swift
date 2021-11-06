@@ -92,8 +92,10 @@ public class ObservableStructure<T> {
     ///   - block: 值變化後要執行的動作
     /// - Returns: ObservableCancellable 可取消觀察的物件，必須用強引用抓住。
     public func observe(_ identifier: String, queue: DispatchQueue? = nil, using block: @escaping (T) -> Void)-> ObservableCancellable {
+        let closures = _closures
         let entity = ClosureEntity.init(identifier, queue: queue, closure: block)
-        _closures.addValue(entity, string: identifier)
+        closures.addValue(entity, string: identifier)
+        _closures = closures
         return entity
     }
     
