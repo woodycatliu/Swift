@@ -6,8 +6,6 @@ protocol ObservableCancellableProtocol {
 public class ObservableCancellable: ObservableCancellableProtocol, Hashable {
     
     let identifier: String
-    
-    private let lock: NSLock = NSLock()
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(identifier)
