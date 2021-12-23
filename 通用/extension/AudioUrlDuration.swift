@@ -17,7 +17,7 @@ extension URL {
         func getDuration(urlString: String)-> Double? {
             return cache[urlString]
         }
-        
+        //
         func append(urlString: String, duration: Double) {
             lock.lock()
             defer {
