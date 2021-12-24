@@ -2,10 +2,7 @@
 ViewModifier 
 Swift UI 視圖修改器
 簡單說就是宣告View時後面一堆命令，如:  .pading()
-
 */
-
-
 
 struct MyStyleStruct: ViewModifier {
     
