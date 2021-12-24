@@ -152,4 +152,8 @@ extension HorizontalBarView {
         self.rightValue = rightValue
         self.leftValue = leftValue
     }
+
+     func setBarValue(right rightValue: Int, left leftValue: Int) {
+        setBarValue(right: Double(rightValue), left: Double(leftValue))
+    }
 }
