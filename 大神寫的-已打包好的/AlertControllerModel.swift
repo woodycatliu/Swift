@@ -74,7 +74,7 @@ class AlertController: UIAlertController {
             }
         }
     }
-    
+    //
     // 添加點擊外框消失事件
     public func addDismissesOnBackdropTap()
     {
