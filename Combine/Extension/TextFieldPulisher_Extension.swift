@@ -1,9 +1,4 @@
-//
-//  TextFieldExtension.swift
-//  ReactiveProgrammingFramework_MemoryLeak
-//
 //  Created by Woody Liu on 2022/1/3.
-//
 
 import UIKit
 import Combine
