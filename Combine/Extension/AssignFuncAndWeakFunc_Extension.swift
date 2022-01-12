@@ -7,32 +7,43 @@ import Combine
 
 extension Publisher {
     
-    /// with failure
-    func assignWeakFunction<T: AnyObject>(failure failureAction: @escaping ((T)->(Failure)->()), success successAction: @escaping ((T)->(Output)->()), target: T)-> AnyCancellable {
-        let failFuc: WeakFunction<T, Failure> = .init(target: target, method: failureAction)
-        let weakFunction: WeakFunction<T, Output> = .init(target: target, method: successAction)
+    /// will not retain cycle
+    /// failure: fail to do (closure/function)
+    /// success: to do (closure/function)
+    /// on: function contain
+    /// - Returns: AnyCancellable
+    ///  example: assign(failure:  A.faulure, success:  A.success, on: A())
+    public func assign<T: AnyObject>(failure failureAction: @escaping ((T)->(Failure)->()), success successAction: @escaping ((T)->(Output)->()), on target: T)-> AnyCancellable {
+        let failMethod: WeakFunction<T, Failure> = .init(method: failureAction, on: target)
+        let weakFunction: WeakFunction<T, Output> = .init(method: successAction, on: target)
         
-        return sink(receiveCompletion: { [failFuc] in
-            if case let .failure(error) = $0 { failFuc.action(error) }
+        return sink(receiveCompletion: { [failMethod] in
+            if case let .failure(error) = $0 { failMethod(error) }
         } , receiveValue: { [weakFunction] in
-            weakFunction.action($0)
+            weakFunction($0)
         })
     }
     
-    /// action: when publisher is success
-    func assignWeakFunc<T: AnyObject>(_ action: @escaping ((T)->(Output)->()), target: T)-> AnyCancellable {
+    /// will not retain cycle
+    /// action: success to do (closure/function)
+    /// on: function contain
+    /// - Returns: AnyCancellable
+    ///  example: assign(failure:  A.faulure, success:  A.success, on: A())
+    public func assign<T: AnyObject>(to action: @escaping ((T)->(Output)->()), on target: T)-> AnyCancellable {
         
-        let weakFunction: WeakFunction<T, Output> = .init(target: target, method: action)
-
+        let weakFunction: WeakFunction<T, Output> = .init(method: action, on: target)
+        
         return sink(receiveCompletion: { _ in } , receiveValue: {
             [weakFunction] in
-            weakFunction.action($0)
+            weakFunction($0)
         })
-
+        
     }
 
-    /// important: will retain cycle
-    func assignFunc(_ action: @escaping ((Output)->()))-> AnyCancellable {
+    /// important: maybe make retain cycle
+    /// action: success to do (closure/function)
+    /// - Returns: AnyCancellable
+    public func assign(to action: @escaping ((Output)->()))-> AnyCancellable {
         
         sink(receiveCompletion: { _ in } , receiveValue: {
             action($0)
@@ -46,10 +57,15 @@ public struct WeakFunction<Reference: AnyObject, Output> {
     public typealias Method = (Reference) -> (Output) -> Void
     public weak var target: Reference?
     public let method: Method
-    public func action(_ output: Output) {
+    public func callAsFunction(_ output: Output) {
         guard let target = target else {
             return
         }
         method(target)(output)
+    }
+    
+    init(method: @escaping Method, on target: Reference) {
+        self.target = target
+        self.method = method
     }
 }
