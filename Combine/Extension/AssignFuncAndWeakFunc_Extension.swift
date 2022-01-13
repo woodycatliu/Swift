@@ -14,13 +14,13 @@ extension Publisher {
     /// - Returns: AnyCancellable
     ///  example: assign(failure:  A.faulure, success:  A.success, on: A())
     public func assign<T: AnyObject>(failure failureAction: @escaping ((T)->(Failure)->()), success successAction: @escaping ((T)->(Output)->()), on target: T)-> AnyCancellable {
-        let failMethod: WeakFunction<T, Failure> = .init(method: failureAction, on: target)
-        let weakFunction: WeakFunction<T, Output> = .init(method: successAction, on: target)
         
-        return sink(receiveCompletion: { [failMethod] in
-            if case let .failure(error) = $0 { failMethod(error) }
-        } , receiveValue: { [weakFunction] in
-            weakFunction($0)
+        return sink(receiveCompletion: { [weak target] in
+            if let target = target,
+            case let .failure(error) = $0 { failureAction(target)(error) }
+        } , receiveValue: { [weak target] in
+            guard let target = target else { return }
+            successAction(target)($0)
         })
     }
     
@@ -30,12 +30,11 @@ extension Publisher {
     /// - Returns: AnyCancellable
     ///  example: assign(failure:  A.faulure, success:  A.success, on: A())
     public func assign<T: AnyObject>(to action: @escaping ((T)->(Output)->()), on target: T)-> AnyCancellable {
-        
-        let weakFunction: WeakFunction<T, Output> = .init(method: action, on: target)
-        
+                
         return sink(receiveCompletion: { _ in } , receiveValue: {
-            [weakFunction] in
-            weakFunction($0)
+            [weak target] in
+            guard let target = target else { return }
+            action(target)($0)
         })
         
     }
@@ -51,21 +50,4 @@ extension Publisher {
     }
     
     
-}
-
-public struct WeakFunction<Reference: AnyObject, Output> {
-    public typealias Method = (Reference) -> (Output) -> Void
-    public weak var target: Reference?
-    public let method: Method
-    public func callAsFunction(_ output: Output) {
-        guard let target = target else {
-            return
-        }
-        method(target)(output)
-    }
-    
-    init(method: @escaping Method, on target: Reference) {
-        self.target = target
-        self.method = method
-    }
 }
