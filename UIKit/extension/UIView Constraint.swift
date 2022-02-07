@@ -1,3 +1,12 @@
+//
+//  UIViewConstraintExtension.swift
+//  Timer&Operation
+//
+//  Created by Woody on 2022/2/7.
+//
+
+import UIKit
+
 import UIKit
 
 public struct AnchoredConstraints {
@@ -69,7 +78,7 @@ extension UIView {
         return anchor(top: superviewTopAnchor, leading: superviewLeadingAnchor, bottom: superviewBottomAnchor, trailing: superviewTrailingAnchor, padding: padding)
     }
     
-     func setShadow(color: UIColor, alpha: Float, offset: CGSize, blur: CGFloat) {
+    func setShadow(color: UIColor, alpha: Float, offset: CGSize, blur: CGFloat) {
         self.layer.shadowColor = color.cgColor
         self.layer.shadowOpacity = alpha
         self.layer.shadowOffset = offset
@@ -107,14 +116,14 @@ extension UIView {
         centerYAnchor.constraint(equalTo: anchor, constant: constant).isActive = true
     }
     
-    func centerInSuperview(size: CGSize = .zero) {
+    func centerInSuperview(size: CGSize = .zero, xConstant: CGFloat = 0, yConstant: CGFloat = 0) {
         translatesAutoresizingMaskIntoConstraints = false
         if let superviewCenterXAnchor = superview?.centerXAnchor {
-            centerXAnchor.constraint(equalTo: superviewCenterXAnchor).isActive = true
+            centerXAnchor.constraint(equalTo: superviewCenterXAnchor, constant: xConstant).isActive = true
         }
         
         if let superviewCenterYAnchor = superview?.centerYAnchor {
-            centerYAnchor.constraint(equalTo: superviewCenterYAnchor).isActive = true
+            centerYAnchor.constraint(equalTo: superviewCenterYAnchor, constant: yConstant).isActive = true
         }
         
         if size.width != 0 {
@@ -169,3 +178,4 @@ extension UIView {
         return defaultStack(.horizontal, views: views, spacing: spacing, alignment: alignment, distribution: distribution)
     }
 }
+
