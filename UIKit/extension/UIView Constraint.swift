@@ -69,15 +69,14 @@ extension UIView {
         return anchor(top: superviewTopAnchor, leading: superviewLeadingAnchor, bottom: superviewBottomAnchor, trailing: superviewTrailingAnchor, padding: padding)
     }
     
-    func setShadow(color: UIColor, alpha: Float, offset: CGSize, blur: CGFloat) {
+     func setShadow(color: UIColor, alpha: Float, offset: CGSize, blur: CGFloat) {
         self.layer.shadowColor = color.cgColor
         self.layer.shadowOpacity = alpha
         self.layer.shadowOffset = offset
         self.layer.shadowRadius = blur
         
-        // 使用上有疑慮，暫時註解
-//        let shadowPath = UIBezierPath(rect: CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height))
-//        self.layer.shadowPath = shadowPath.cgPath
+        let shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius)
+        self.layer.shadowPath = shadowPath.cgPath
     }
     
     @discardableResult
