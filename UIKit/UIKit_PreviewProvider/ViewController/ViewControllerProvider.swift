@@ -1,8 +1,8 @@
 //
-//  UIViewControllerPreviewProvider.swift
+//  ViewControllerProvider.swift
 //  Timer&Operation
 //
-//  Created by Woody on 2022/2/10.
+//  Created by Woody on 2022/2/11.
 //
 
 import Foundation
@@ -25,29 +25,17 @@ public struct ViewControllerProvider: View {
         let vr = ViewControllerRepresentable(vc: viewController)
         self.viewController = AnyView(vr)
     }
+    
+    init(_ viewController: UIViewController, size: ViewLayout.Size) {
+        let vr = ViewControllerRepresentable(vc: viewController)
+        self.viewController = AnyView(vr.frame(width: size.width, height: size.height, alignment: .center))
+    }
 }
 
 
 extension ViewControllerProvider {
     public static var empty: ViewControllerProvider {
         return ViewControllerProvider.init(UIViewController())
-    }
-}
-
-
-@frozen public struct ViewControllerRepresentable: UIViewControllerRepresentable {
-    let vc: UIViewController
-    public func makeUIViewController(context: Context) -> some UIViewController {
-        return vc
-    }
-    
-    public func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-    }
-}
-
-struct ViewController_Preview: PreviewProvider {
-    static var previews: some View {
-        return ViewControllerProvider.empty
     }
 }
 
