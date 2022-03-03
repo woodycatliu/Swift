@@ -25,7 +25,7 @@ class DidSetPublished<Value> {
 }
 
 // Another Soulation
-extension Published.Publisher where Failure == Never {
+extension Publisher where Failure == Never {
     var didSet: AnyPublisher<Output, Never> {
         return self.receive(on: RunLoop.main).eraseToAnyPublisher()
     }
