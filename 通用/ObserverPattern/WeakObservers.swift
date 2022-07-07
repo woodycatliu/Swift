@@ -3,7 +3,6 @@
 觀察者模式
 */
 
-
 final class WeakObservers<ProtoclObject> {
     
     private var mapTable: NSMapTable = NSMapTable<NSString, AnyObject>.init(keyOptions: .strongMemory, valueOptions: .weakMemory)
