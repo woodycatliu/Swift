@@ -27,13 +27,13 @@ extension Publishers {
         }
         
         public func receive<S: Combine.Subscriber>(subscriber: S) where S.Input == Output, S.Failure == Failure {
-            self.upstream.subscribe(subscriber)
-            shareBinding(self.upstream.share(), prefix)
+            binding(upstream, prefix)
+            upstream.subscribe(subscriber)
         }
         
-        private func shareBinding<P: Publisher>(_ share:  Publishers.Share<P>, _ prefix: String) {
+        private func binding<P: Publisher>(_ publisher: P, _ prefix: String) {
             let prefix = prefix.isEmpty ? "" : "\(prefix) "
-            share.sink(receiveCompletion: {
+            publisher.sink(receiveCompletion: {
                 switch $0 {
                 case .finished:
                     Swift.print("\(prefix)Finished  -----------------")
